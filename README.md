@@ -1,250 +1,255 @@
-# Chatterbox Lab
+# Adding React to Flask
 
 ## Learning Goals
 
-- Create an API with Flask for a React frontend application.
+- Use React and Flask together to build beautiful and powerful web applications.
+- Organize client and server code so that it is easy to understand and maintain.
+
+---
+
+## Key Vocab
+
+- **Full-Stack Development**: development of a frontend and a backend for an
+  application. True full-stack development includes a database, a logic/server
+  layer, and a frontend built in JavaScript, HTML, and CSS.
+- **Backend**: the layer of a full-stack application that handles business logic
+  and other programmatic tasks that users do not or should not see. Can be
+  written in many languages, including Python, Java, Ruby, PHP, and more.
+- **Frontend**: the layer of a full-stack application that users see and
+  interact with. It is always written in the frontend languages: JavaScript,
+  HTML, and CSS. (_There are others now, but they are based on these three._)
+- **Cross-Origin Resource Sharing (CORS)**: a method for a server to indicate
+  any ports (or other identifiers) for servers that can share its resources.
+- **Transmission Control Protocol (TCP)**: a protocol that defines how computers
+  send data to each other. A connection is formed and stays active until the
+  applications on either end have finished sending data to one another.
+- **Hypertext Transfer Protocol (HTTP)**: a stateless protocol where
+  applications communicate for the length of time that it takes for data to be
+  transferred.
+- **Websocket**: a protocol that allows clients and servers to communicate with
+  one another in both directions. The bidirectional nature of websocket
+  communication allows a connected state to be generated and the connection
+  maintained until it is terminated by one side. This allows for speedy and
+  seamless connections between frontends and backends.
+
+---
 
 ## Introduction
 
-So far, we've seen how to build a Flask API and perform various CRUD actions
-using SQLAlchemy. In this lab, you'll work on creating an API in Flask once more
-— but this time, you'll also have code for a React frontend application, so you
-can get a taste of full-stack development!
-
-This project is separated into two applications:
-
-- A React frontend, in the `client` directory.
-- A Flask backend, in the `server` directory.
-
-All of the features for the React frontend are built out, and we have a simple
-`json-server` API that you can run to see what the completed version of the app
-will look like. Your main goal with this lab is to build out a Flask API server
-to replace `json-server`, so most of your coding will be done in the backend.
+Earlier in this phase, we used React and Flask together for two different
+applications: Chatterbox, a messenger with CRUD functionality, and Plantsy, a
+plant shop with CRUD functionality through a RESTful backend. In these labs, we
+focused on the server-side (Python) code. Now, let's take a closer look at the
+JavaScript that creates the user interface.
 
 ---
 
-## Frontend Setup
+## Setup
 
-Let's take a quick tour of what we have so far.
+This lesson contains the solution code from the Chatterbox lab. To run the
+application, open two terminal windows. In the first, enter the `server/`
+directory and run:
 
-To get started, `cd` into the `client` directory. Then run:
+- `pipenv install && pipenv shell` to enter your virtual environment.
+- `export FLASK_APP=app.py` and `export FLASK_RUN_PORT=5555` to configure your
+  Flask environment.
+- `flask db upgrade` to generate your database.
+- `python seed.py` to populate it.
+- `python app.py` to run your development server.
 
-```console
-$ npm install
-$ npm run server
-```
+In the second window, enter the `client/` directory and run:
 
-This will install the React project dependencies, and run a demo API server
-using `json-server`. Next, run this in a new terminal:
+- `npm install` to retrieve the React project's dependencies.
+- `npm start` to start your development server and open the application.
 
-```console
-$ npm start
-```
+> **NOTE: There's a lot more to keep track of now! When you have to run several
+> commands to start working, it's useful to write scripts to automate the
+> startup process. Refer back to "Configuring Python Applications" in Phase 3 if
+> you need help getting started! Don't worry about messing things up- you can
+> always re-fork the lesson if you need to.**
 
-NOTE: If you get an error message about "Error: digital envelope
-routines::unsupported", type the following in your terminal:
-`export NODE_OPTIONS=--openssl-legacy-provider`, then try starting the client
-again.
+In your browser, you should see the Chatterbox app in all its glory:
 
-Then visit [http://localhost:3000](http://localhost:3000) in the browser and
-interact with the demo application to get a sense of its features.
+![screenshot of chatterbox app with purple header bar and messages from several
+users](https://curriculum-content.s3.amazonaws.com/python/python-p4-adding-react-to-flask-chatterbox.png)
 
-Here's a demo of the what the React app should look like when using
-`json-server` as the API:
-
-![Chatterbox screenshot
-1](https://curriculum-content.s3.amazonaws.com/python/chatterbox_screenshot_1.png "A screenshot of the chatterbox app in dark mode. The header is a purple bar
-with 'Chatterbox' in white text. White messages are displayed below their
-associated usernames on a black background beneath the header. There is a space
-to enter new messages below this black box.")
-
-![Chatterbox screenshot
-2](https://curriculum-content.s3.amazonaws.com/python/chatterbox-screenshot_2.png "A screenshot of the chatterbox app in light mode. The header is a pink bar with
-'Chatterbox' in black text. Black messages are displayed below their associated
-usernames on a white background beneath the header. There is a space to enter
-new messages below this black box. A message by user 'Duane' is in the process
-of being edited.")
-
-Take a look at the components provided in the `client` directory. Explore the
-code and pay special attention to where the React application is interacting
-with `json-server`. Where are the `fetch` requests being written? What routes
-are needed to handle these requests? What HTTP verbs? What data is being sent in
-the body of the requests?
-
-Once you've familiarized yourself yourself with the code, turn off `json-server`
-with `control + c` in the terminal where we ran `npm run server` (you can keep
-the React application running, though). Next, let's see what we have in the
-backend.
+Once you've confirmed that the application is running correctly, open up the
+`client/` directory to explore our JavaScript code.
 
 ---
 
-## Backend Setup
+## The Client-Server Model
 
-In another terminal, run `pipenv install; pipenv shell` to install the
-dependencies and enter your virtual environment, then `cd` into the `server`
-directory to start running your Python code.
+In previous lessons, we've discussed the functions of the client and server in
+web applications: the client handles what goes on in the browser (i.e. the tasks
+controlled by the user) and the server handles data from the database and hidden
+tasks that the user doesn't need to or shouldn't see. We use this separation of
+tasks to inform how we structure our applications in development.
 
-```console
-pipenv install  && pipenv shell
-cd server
+Within our base directory where we initialize Git, we create our basic
+documentation files like `README.md` and two directories: `client/` and
+`server/`. You may prefer to name them more descriptively, like
+`chatterbox-client/` and `chatterbox-server/`. (Some people find this redundant,
+others informative. Ultimately up to you!)
+
+Inside of the `client/` directory, you will use Node to create the skeleton for
+your client-side code and install dependencies. In the `server/` directory, you
+will use Pipenv to install dependencies, then Flask to create your server-side
+application and database. We will explore this in more detail in the next
+lesson.
+
+When development servers are run for both sides, the two can communicate over
+Transmission Control Protocols (TCP) such as HTTP and Websocket. Any TCP
+connection stays active until the two sides are done sending data to one
+another; in HTTP, the connection ends every time a message is sent. This is what
+we see in using `fetch()`. Websocket, another protocol, keeps the connection
+open until it is explicitly ended by either side- we will learn more about this
+with `socket.io` later in this module.
+
+---
+
+## React `fetch()`
+
+React uses a function called `fetch()` to retrieve data from APIs at other URLs.
+In order to get data with fetch, we put the command inside of a `useEffect` hook
+as seen in `client/src/components/App.js`. We include an empty array as a second
+argument (dependencies) to tell `useEffect` to only run `fetch()`, an
+asynchronous operation, on the first render of `App`.
+
+```js
+// client/src/components/App.js
+
+function App() {
+  ...
+  useEffect(() => {
+    fetch("http://127.0.0.1:5555/messages")
+      .then((r) => r.json())
+      .then((messages) => setMessages(messages));
+  }, []);
+  ...
 ```
 
-In this directory, you're given a bare-bones template for a Flask API
-application. It should look familiar to other Flask labs you've seen and has all
-the code set up so you can focus on building out your model and API routes.
+As we can see, this has the React application looking for a resource at
+`http://127.0.0.1:5555/messages`: our Flask API. The response data is `then()`
+converted to JSON if it is not already in that format, `then()` that data is
+used to populate the application with messages.
 
-Note the database has not been created, nor have any migrations been performed.
+We can throw much more into our chain here- for instance, if we're looking for a
+"200: OK" response from the server:
 
-You'll be responsible for:
+```js
+// client/src/components/App.js
 
-- Implementing the `Message` model and performing migrations.
-- Setting up the necessary routes to handle requests.
-- Performing CRUD actions with SQLAlchemy.
-- Sending the necessary JSON data in the responses.
-
-### Allowing Frontend Requests: CORS
-
-The only new code for the server is the [Flask CORS extension][flask-cors]. This
-extension provides some Flask middleware which we need to configure so that
-applications running in the browser, like our React client, can make requests to
-the backend.
-
-If we didn't use this gemextension, any requests from our React frontend in the
-browser would result in an error message like this:
-
-```txt
-Access to fetch at 'http://localhost:5000/messages' from origin
-'http://localhost:3000' has been blocked by CORS policy: No
-'Access-Control-Allow-Origin' header is present on the requested resource. If an
-opaque response serves your needs, set the request's mode to 'no-cors' to fetch
-the resource with CORS disabled.
+function App() {
+  ...
+  useEffect(() => {
+    fetch("http://127.0.0.1:5555/messages")
+      .then(r => {
+        if (r.ok) {
+          return r.json()
+        }
+        throw r;
+      })
+      .then((messages) => setMessages(messages))
+  }, []);
+  ...
 ```
 
-The reason for this warning message is due to a browser security feature known
-as [Cross-Origin Resource Sharing (CORS)][cors mdn]. When we use JavaScript from
-one domain (aka origin) to make a request to a server on a different domain, the
-default behavior of the browser is to block those requests from going through.
+It is wise when developing full-stack applications to look for the correct data
+formats and response codes from the server as you move forward. Since you wrote
+the backend yourself, this is _much_ easier than doing so while `fetch()`ing
+data from someone else's API and will help your users understand how to avoid
+errors in the future. In the example above, we simply `throw r` because it
+receives any error message we catch and send forward from our Flask backend!
 
-For example, if I own the website `definitelynotahacker.com`, I can't use
-JavaScript to make a network request to `api.yourbankaccount.com`, unless
-`api.yourbankaccount.com` explicitly gives permission to my website.
+### `POST`, `PATCH`, `DELETE` with `fetch()`
 
-To give that permission, any server that we want to make requests to using
-JavaScript must add some special **headers** to the response that tell the
-browser that the request was permitted.
+`fetch()` defaults to using `GET` as its HTTP method. If we want to carry out
+functions other than basic retrieves, we need to specify that and our message
+format
 
-Here's what the CORS configuration looks like (in the `server/app.py` file):
+```js
+//client/src/components/NewMessage.js
+
+function NewMessage({ currentUser, onAddMessage }) {
+  const [body, setBody] = useState("");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    fetch("http://127.0.0.1:5555/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: currentUser.username,
+        body: body,
+      }),
+    })
+      .then((r) => r.json())
+      .then((newMessage) => {
+        onAddMessage(newMessage);
+        setBody("");
+      });
+  }
+  ...
+
+```
+
+Rather than `useEffect`, here we have a hook called `onAddMessage` passed to the
+`NewMessage` element that updates the entire app when a message is confirmed to
+have been created. `handleSubmit()` is invoked each time a user hits the "Send"
+button and generates a `POST` request with the body of the `NewMessage` element.
+
+`fetch()` takes an optional object as a second argument after the Flask API's
+URL with an HTTP request method, headers to specify the format of the message,
+and a message body. (`PATCH` requests need these elements as well!)
+
+After generating a new record in the database, Flask returns a response that is
+assigned to `r` and converted to JSON if necessary. Finally, we invoke
+`onAddMessage` to update the app with this new message and reset the form to be
+empty and ready for new input.
+
+### CORS Recap
+
+Cross-Origin Resource Sharing, or CORS, is a mechanism that lets a server (the
+Flask application in our case) specify URL patterns other than its own from
+which the client should be allowed to load resources. This is carried out in
+HTTP headers, but we typically handle it in a more automated fashion with
+extensions like Flask-CORS.
+
+The Fetch API follows the same-origin policy, which enforces that resources can
+only be loaded from URL patterns owned by the application sending the request.
+This is why we need to use CORS in our Flask application, as seen in
+`server/app.py`:
 
 ```py
 # server/app.py
 
 from flask import Flask
 from flask_cors import CORS
-
+...
 app = Flask(__name__)
+...
 CORS(app)
 
 ```
 
-You don't have to make any changes to this configuration to complete this lab,
-but CORS warnings are a very common thing to encounter in web development, so
-next time you see them, you'll know what this means!
-
-> **NOTE: There may come a time when you want CORS configured for some routes
-> but not others. You can specify these with the optional `resources` argument
-> or by instead using the `@cross_origin()` decorator on specific routes.**
-
-### Different Types of Input
-
-In previous lessons, we have used **form** data to retrieve input from the
-client. This is the typical approach we would take to this task, but some sites
-traffic in raw JSON instead. We're going to give that a shot here.
-
-With the client running, navigate to Postman and point it to `localhost:3000`.
-Instead of using "Params", we will click on "Body", select "raw" from the radio
-buttons, then select "JSON" from the dropdown menu on the right.
-
-![An empty text box beginning with a 1. Options for input type are above the
-text box, including "form-data" and "raw".](https://curriculum-content.s3.amazonaws.com/python/raw-json-postman.png)
-
-From here, you can start to add messages:
-
-```json
-{
-  "body": "Hello, World!",
-  "username": "Ian"
-}
-```
-
-When your Flask application is up and running, you can retrieve this data as a
-dictionary with the `request.get_json()` method.
-
 ---
 
-## Instructions
+## Conclusion
 
-Work through the deliverables below. There are tests in the `server` folder.
-You'll need to `cd` into the `server` directory and run `pytest -x` to run the
-tests for the Flask backend until the first failure.
-
-Make sure to try out your routes from the React frontend application as well
-once you have everything set up. You can run your Flask server from the
-`server/` directory with:
-
-```console
-$ python app.py
-```
-
-Or, if you have configured your Flask environment:
-
-```console
-$ flask run
-```
-
-### Model
-
-Start by generating the `Message` model and the necessary migration code to
-create messages with the following attributes:
-
-- "body": String.
-- "username": String.
-- "created_at": DateTime.
-- "updated_at": DateTime.
-- Don't forget to add default values for "created_at" and "updated_at"!
-  - (Hint - we discussed this in the Phase 3 Many-to-Many Relationships reading
-    and gave an example in the Phase 4 Building a Get API Reading.)
-
-Once you've created the model, you should initialize the database, generate and
-run the migrations, and use the provided `seed.py` file to seed the database:
-
-```console
-$ flask db init
-$ flask db revision --autogenerate -m'your message'
-$ flask db upgrade
-$ python seed.py
-```
-
-### Routes
-
-Build out the following routes to handle the necessary CRUD actions:
-
-- `GET /messages`: returns an array of all messages as JSON, ordered by
-  `created_at` in ascending order.
-- `POST /messages`: creates a new message with a `body` and `username` from
-  params, and returns the newly created post as JSON.
-- `PATCH /messages/<int:id>`: updates the `body` of the message using params,
-  and returns the updated message as JSON.
-- `DELETE /messages/<int:id>`: deletes the message from the database.
+This has been a brief review of concepts from Phase 2 and the beginning of
+Phase 4. Hopefully, this served as a good reminder of how to use `fetch()`,
+process `fetch()` data, and implement CORS! We will elaborate on these concepts
+and learn how to improve connections between full-stack application clients and
+servers in the coming lessons.
 
 ---
 
 ## Resources
 
-- [Flask - Pallets](https://flask.palletsprojects.com/en/2.2.x/)
-- [Cross-Origin Resource Sharing - Mozilla][cors mdn]
-- [Flask-CORS][flask-cors]
-- [flask.json.jsonify Example Code - Full Stack Python](https://www.fullstackpython.com/flask-json-jsonify-examples.html)
-- [SQLAlchemy-serializer - PyPI](https://pypi.org/project/SQLAlchemy-serializer/)
-
-[cors mdn]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-[flask-cors]: https://flask-cors.readthedocs.io/en/latest/
+- [Client-Server Model - GeeksforGeeks](https://www.geeksforgeeks.org/client-server-model/)
+- [Using the Fetch API - Mozilla](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
+- [Cross-Origin Reference Sharing (CORS) - Mozilla](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
